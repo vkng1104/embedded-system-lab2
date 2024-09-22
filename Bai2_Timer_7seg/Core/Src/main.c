@@ -53,10 +53,17 @@
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 void system_init();
-void test_LedDebug();
 void test_LedY0();
 void test_LedY1();
 void test_7seg();
+void ShiftLeft() ;
+void led_dot();
+void led_scan(int Hz);
+void display_time();
+void test_LedDebug();
+volatile uint8_t hours = 15;
+volatile uint8_t minutes = 47;
+int time[4]= {1,5,4,7};
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -70,6 +77,7 @@ void test_7seg();
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -105,11 +113,22 @@ int main(void)
   {
 	  while(!flag_timer2);
 	  flag_timer2 = 0;
-	  // main task, every 50ms
+	  // main task, every 10ms
 	  test_LedDebug();
 	  test_LedY0();
 	  test_LedY1();
+
+	  // Q3
+//	  led_scan(100);
+
+	  // Q4
+//	  display_time();
+//	  led_dot();
+
+	  // Q5
 	  test_7seg();
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -130,6 +149,7 @@ void SystemClock_Config(void)
   */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
@@ -146,6 +166,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -153,7 +174,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV4;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
   {
@@ -168,45 +189,131 @@ void system_init(){
 	  HAL_GPIO_WritePin(DEBUG_LED_GPIO_Port, DEBUG_LED_Pin, 0);
 	  timer_init();
 	  led7_init();
-	  setTimer2(50);
+	  setTimer2(10);
 }
 
+uint8_t state;
 uint8_t count_led_debug = 0;
-uint8_t count_led_Y0 = 0;
-uint8_t count_led_Y1 = 0;
+uint16_t count_led_dot = 0;
+uint16_t count_led_Y0 = 0;
+uint16_t count_led_Y1 = 0;
+int timer_count = 0;
+uint8_t count_ledscan = 0;
+int holder;
 
-void test_LedDebug(){
-	count_led_debug = (count_led_debug + 1)%20;
-	if(count_led_debug == 0){
-		HAL_GPIO_TogglePin(DEBUG_LED_GPIO_Port, DEBUG_LED_Pin);
-	}
+void test_LedDebug()
+{
+    count_led_debug = (count_led_debug + 1) % 100;
+    if (count_led_debug == 0)
+    {
+        HAL_GPIO_TogglePin(DEBUG_LED_GPIO_Port, DEBUG_LED_Pin);
+    }
 }
 
-void test_LedY0(){
-	count_led_Y0 = (count_led_Y0+ 1)%100;
-	if(count_led_Y0 > 40){
-		HAL_GPIO_WritePin(OUTPUT_Y0_GPIO_Port, OUTPUT_Y0_Pin, 1);
-	} else {
-		HAL_GPIO_WritePin(OUTPUT_Y0_GPIO_Port, OUTPUT_Y0_Pin, 0);
-	}
+void test_LedY0()
+{
+    count_led_Y0 = (count_led_Y0 + 1) % 100;
+    if (count_led_Y0 > 40)
+    {
+        HAL_GPIO_WritePin(GPIOE, GPIO_PIN_5, 1);
+    }
+    else
+    {
+        HAL_GPIO_WritePin(GPIOE, GPIO_PIN_5, 0);
+    }
 }
 
-void test_LedY1(){
-	count_led_Y1 = (count_led_Y1+ 1)%40;
-	if(count_led_Y1 > 10){
-		HAL_GPIO_WritePin(OUTPUT_Y1_GPIO_Port, OUTPUT_Y1_Pin, 0);
-	} else {
-		HAL_GPIO_WritePin(OUTPUT_Y0_GPIO_Port, OUTPUT_Y1_Pin, 1);
-	}
+void test_LedY1()
+{
+    count_led_Y1 = (count_led_Y1 + 1) % 40;
+    if (count_led_Y1 > 10)
+    {
+        HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, 1);
+    }
+    else
+    {
+        HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, 0);
+    }
 }
 
-void test_7seg(){
-	//write number1 at led index 0 (not show dot)
-	led7_SetDigit(1, 0, 0);
-	led7_SetDigit(5, 1, 0);
-	led7_SetDigit(4, 2, 0);
-	led7_SetDigit(7, 3, 0);
+void test_7seg()
+{
+    // write number1 at led index 0 (not show dot)
+    timer_count = (timer_count + 1) % 100;
+    if (timer_count == 1)
+    {
+        ShiftLeft();
+        led7_SetDigits(time);
+    }
 }
+
+void led_dot()
+{
+    count_led_dot = (count_led_dot + 1) % 50;
+
+    if (count_led_dot == 0)
+    {
+        state = (state + 1) % 2;
+        led7_SetColon(state);
+    }
+}
+
+// Exercise 3
+void led_scan(int Hz)
+{
+    // 1Hz => 100
+    // 25Hz => 4
+    // 100Hz => 1
+    count_ledscan = (count_ledscan + 1) % (100 / Hz);
+    if (count_ledscan == 0)
+    {
+        led7_Scan();
+    }
+}
+
+// Exercise 4
+void update_time(void)
+{
+    minutes++;
+    if (minutes >= 60)
+    {
+        minutes = 0;
+        hours++;
+        if (hours >= 24)
+        {
+            hours = 0;
+        }
+    }
+}
+
+void display_time()
+{
+    timer_count = (timer_count + 1) % 100;
+
+    if (timer_count == 0)
+    {
+        update_time();
+        time[0] = hours / 10;
+        time[1] = hours % 10;
+        time[2] = minutes / 10;
+        time[3] = minutes % 10;
+        led7_SetDigits(time);
+    }
+}
+
+// Exercise 5
+void ShiftLeft()
+{
+    // Shift each element left by one position
+    holder = time[0];
+    for (int i = 0; i < 3; i++)
+    { // Only iterate through the first three elements
+        time[i] = time[i + 1];
+    }
+    // Set the last element to a default value (e.g., 0 or another placeholder)
+    time[3] = holder; // Adjust as needed
+}
+
 /* USER CODE END 4 */
 
 /**
@@ -240,5 +347,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
