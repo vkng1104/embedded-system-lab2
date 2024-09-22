@@ -69,6 +69,16 @@ void led7_SetDigit(int num, int position, uint8_t show_dot){
 }
 
 /**
+ * @brief  Display all digits at their corresponding positions of led 7-segment
+ */
+void led7_SetDigits(int time[4]) {
+	led7_SetDigit(time[0], 0, 0);
+	led7_SetDigit(time[1], 1, 0);
+	led7_SetDigit(time[2], 2, 0);
+	led7_SetDigit(time[3], 3, 0);
+}
+
+/**
   * @brief  Control the colon led
   * @param  status Status applied to the colon (1: turn on, 0: turn off)
   *          This parameter can be one of the following values:

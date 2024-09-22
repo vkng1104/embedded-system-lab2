@@ -1,10 +1,9 @@
-## BKIT ARM 4 - LAB 01: Khảo sát GPIO (dùng Delay)
+## Embedded System - LAB 02: Timer Interrupt and LED Scanning
 
-- Biết cách cấu hình và sử dụng timer trên kit thí nghiệm;
-- Biết cách cấu hình và sử dụng thư viện LED bảy đoạn trên kit thí nghiệm;
+- Know how to use timer interrupt and led scanning
 
 ## Hướng dẫn Build, Run
 
-- Bước 1: Import Project vào STM32CubeIDE (File -> Open Projects From File System...);
-- Bước 2: Build project;
-- Bước 3: Run;
+- Step 1: Import Project on STM32CubeIDE (File -> Open Projects From File System...);
+- Step 2: Build project;
+- Step 3: Run;

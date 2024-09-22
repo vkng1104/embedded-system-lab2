@@ -6,6 +6,7 @@
  */
 
 #include "software_timer.h"
+#include "led_7seg.h"
 
 #define TIMER_CYCLE_2 1
 
